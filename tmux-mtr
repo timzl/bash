@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# This script creates a file, runs an MTR at specified interval, and prints the output of the MTR to the file
+
+# Create output file
+echo "What would you like your file called?"
+read filename || { echo "Error: Invalid file name format." >&2; exit 1; }
+
+touch ".mtr"
+
+# Open tmux session and create MTR
+echo "What is the IP you'd like to run MTRs to?"
+read ip || { echo "Error: Invalid IP address." >&2; exit 1; }
+
+echo "How often do you want the MTR to run?
+1. 5 Minutes
+2. 10 Minutes
+3. 15 Minutes
+4. Exit"
+
+read option || { echo "Error: Invalid option." >&2; exit 1; }
+
+case $option in
+  1) interval=300 ;;
+  2) interval=600 ;;
+  3) interval=900 ;;
+  4) echo "Exiting..."; exit 0 ;;
+  *) echo "Invalid option. Exiting..." && exit 1 ;;
+esac
+
+tmux new -d -s "$filename" "mtr -rwbzc 100 $ip | tee -a $filename.mtr; sleep $interval; bash -c 'exit'"
+
+echo "MTR started in tmux session: $filename. You can view it using 'tmux attach -t $filename'"
